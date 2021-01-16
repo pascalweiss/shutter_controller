@@ -52,7 +52,7 @@ byte PIN_RF433       = 10;
 
 // --- setup ---
 
-enum motor_direction { STOPPED, DOWN, UP, STOP}; 
+enum motor_direction { STOPPED, DOWN, UP, STOP, CYCLE_BREAK}; 
 enum sensor          { POTI, RF_24 };
 
 float l_poti[N];
@@ -94,6 +94,9 @@ void loop() {
   target = get_target();
   overshoot_millis = get_overshoot_millis(overshoot_millis);
   update_directn(positn, target, overshoot_millis);
+  if(is_cycle(l_directn)) {
+    positn = break_cycle_with_new_position(l_directn);
+  }
   exec_motor_or_delay(l_directn[1], l_directn[0]);
   log_state();
 }
@@ -205,7 +208,12 @@ long get_overshoot_millis(long overshoot_millis) {
 
 int update_directn(float positn, float target, long overshoot_millis) {
   int directn = calc_directn(positn, target, overshoot_millis);
-  push_front(l_directn, DIRECTN_SIZE, directn);
+    push_front(l_directn, DIRECTN_SIZE, directn);
+
+  if(is_cycle(l_directn)) {
+    break_cycle_with_new_position(l_directn);
+  } else {
+  }
 }
 
 int calc_directn(float positn, float target, long overshoot_millis) {
@@ -231,7 +239,26 @@ bool target_reached(int directn, float positn, float target) {
 }
 
 
-// --- stop-cycle ---
+// --- break cycle ---
+
+
+bool is_cycle(int *l_directn) {
+  int stop_count = 0;
+  for(int i = 0; i < DIRECTN_SIZE; i++) {
+    if(l_directn[i] == STOP) {
+      stop_count++;
+      if(stop_count > STOP_CYCLE_THRESHOLD) return true;
+    }
+  }
+  return false;
+}
+
+float break_cycle_with_new_position(int *l_directn) {
+  push_front(l_directn, DIRECTN_SIZE, CYCLE_BREAK);
+  push_front(l_directn, DIRECTN_SIZE, STOPPED); 
+  float new_position = target;
+  return new_position;
+}
 
 
 // --- motor ---  
@@ -294,8 +321,8 @@ void log_state() {
   print_percentage(",rf24", l_rf24[0]);
   print_percentage(",target",target);
   print_percentage(",pos", positn);
-  print_int(",direction_0",l_directn[0]);
   print_int(",direction_1",l_directn[1]);
+  print_int(",direction_0",l_directn[0]);
   print_int(",overshoot", overshoot_millis/1000);
   
   Serial.println();
