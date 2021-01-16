@@ -22,6 +22,8 @@
 #define DELAY                    200
 #define HIST_SIZE                2     // the number of old    readings, that are used to determine, if the sensor state has changed. (requirement N > HIST_SIZE + ACTL_SIZE)
 #define ACTL_SIZE                2     // the number of actual readings, that are used to determine, if the sensor state has changed. (requirement N > HIST_SIZE + ACTL_SIZE)
+#define DIRECTN_SIZE             12    // the number of directn commands, that are used to determine, if the system has a command cycle (shutter goes up and down repeatedly)
+#define STOP_CYCLE_THRESHOLD     3     // the number of repeated STOP-directn-commands, to break the stop-cycle
 #define RF24_ENABLE              1
 #define RF24_MAX                 1500
 #define POTI_MAX                 1023  // max value of the POTI // schlafzimmer: 3280, prototyp: 4095
@@ -55,9 +57,9 @@ enum sensor          { POTI, RF_24 };
 
 float l_poti[N];
 float l_rf24[N];
+int l_directn[DIRECTN_SIZE];
 float target;
 float motor_position;
-int   directn;
 float positn;
 unsigned long t_now = 0;
 unsigned long t_diff;
@@ -91,9 +93,8 @@ void loop() {
   read_sensors();
   target = get_target();
   overshoot_millis = get_overshoot_millis(overshoot_millis);
-  int old_directn = directn;
-  directn = get_directn(positn, target, overshoot_millis);
-  exec_motor_or_delay(old_directn, directn);
+  update_directn(positn, target, overshoot_millis);
+  exec_motor_or_delay(l_directn[1], l_directn[0]);
   log_state();
 }
 
@@ -111,6 +112,7 @@ void update_time_diff() {
 // --- position ---  
 
 float get_position(unsigned long t_diff) {
+  int directn = l_directn[0];
   if     (directn == UP)   positn += ((float)t_diff * 1/(1000 *SECS_ROLL_UP));
   else if(directn == DOWN) positn -= ((float)t_diff * 1/(1000 *SECS_ROLL_DOWN));
   // directn == STOPPED
@@ -125,14 +127,6 @@ float get_position(unsigned long t_diff) {
 void read_sensors() {
   push_front(l_poti,N, read_poti());
   push_front(l_rf24,N,read_rf24());
-}
-
-void push_front(float* arr, int arr_size, float val) {
-  int i = arr_size;
-  while(i --> 1) {
-    arr[i] = arr[i - 1];
-  }
-  arr[0] = val;
 }
 
 float read_rf24() {
@@ -193,6 +187,7 @@ bool sensor_changed(float* arr, float threshold) {
 // --- overshoot ---  
 
 long get_overshoot_millis(long overshoot_millis) {
+  int directn = l_directn[0];
   if(overshoot_millis <= 0) {
     if(directn == UP   && positn >= THRESHOLD_OVERSHOOT_UP) {
       return (long)SECS_OVERSHOOT_UP * 1000;
@@ -208,9 +203,14 @@ long get_overshoot_millis(long overshoot_millis) {
 
 // --- direction ---  
 
-int get_directn(float positn, float target, long overshoot_millis) {
+int update_directn(float positn, float target, long overshoot_millis) {
+  int directn = calc_directn(positn, target, overshoot_millis);
+  push_front(l_directn, DIRECTN_SIZE, directn);
+}
+
+int calc_directn(float positn, float target, long overshoot_millis) {
   if(overshoot_millis <= 0) {
-    if(target_reached(directn, positn, target)) {
+    if(target_reached(l_directn[0], positn, target)) {
       return STOP;
     }
     float diff = target - positn;
@@ -220,8 +220,8 @@ int get_directn(float positn, float target, long overshoot_millis) {
       else if(target < positn) return DOWN;
     }
   }
-  if(directn == STOP) return STOPPED;
-  return directn;
+  if(l_directn[0] == STOP) return STOPPED;
+  return l_directn[0];
 }
 
 bool target_reached(int directn, float positn, float target) {
@@ -229,6 +229,9 @@ bool target_reached(int directn, float positn, float target) {
   else if(directn == DOWN && positn <= target) return true;
   else return false;
 }
+
+
+// --- stop-cycle ---
 
 
 // --- motor ---  
@@ -264,6 +267,25 @@ void disable_motor(int old_directn) {
   }
 }
 
+// --- helper ---
+
+void push_front(float* arr, int arr_size, float val) {
+  int i = arr_size;
+  while(i --> 1) {
+    arr[i] = arr[i - 1];
+  }
+  arr[0] = val;
+}
+
+void push_front(int* arr, int arr_size, int val) {
+  int i = arr_size;
+  while(i --> 1) {
+    arr[i] = arr[i - 1];
+  }
+  arr[0] = val;
+}
+
+
 
 // --- logging ---  
 
@@ -272,7 +294,8 @@ void log_state() {
   print_percentage(",rf24", l_rf24[0]);
   print_percentage(",target",target);
   print_percentage(",pos", positn);
-  print_int(",direction",directn);
+  print_int(",direction_0",l_directn[0]);
+  print_int(",direction_1",l_directn[1]);
   print_int(",overshoot", overshoot_millis/1000);
   
   Serial.println();
