@@ -2,17 +2,25 @@
     "configurations": [
         {
             "name": "Mac",
+            "defines": [
+                "ARDUINO=10800",
+                "USBCON"
+            ],
             "includePath": [
-                "${workspaceFolder}/**"
+                "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/**",
+                "/Applications/Arduino.app/Contents/Java/hardware/tools/**",
+                "/Applications/Arduino.app/Contents/Java/libraries/**",
+                "/Users/pw/Documents/Arduino/libraries/**",
+                "/Applications/Arduino.app/Contents/Java/tools/**",
+                "/Users/pw/Documents/Arduino/libraries/**"
             ],
-            "defines": [],
-            "macFrameworkPath": [
-                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks"
+            "forcedInclude": [
+                "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino/Arduino.h"
             ],
-            "compilerPath": "/usr/bin/clang",
+            "intelliSenseMode": "clang-x64",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64"
+            "compilerPath": "/usr/bin/clang"
         }
     ],
     "version": 4

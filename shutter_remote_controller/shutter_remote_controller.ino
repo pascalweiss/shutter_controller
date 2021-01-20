@@ -1,12 +1,3 @@
-/*
-  Example for different sending methods
-  https://github.com/sui77/rc-switch/
-*/
-
-
-// How to use VSCode: https://www.youtube.com/watch?v=dany7ae_0ks
-// Plot with VSCode: https://github.com/devinaconley/arduino-plotter
-
 #include "stdlib.h"
 #include <math.h>
 #include <time.h>
