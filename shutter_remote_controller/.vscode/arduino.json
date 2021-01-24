@@ -1,6 +1,6 @@
 {
-    "sketch": "shutter_remote_controller.ino",
-    "port": "/dev/tty.wchusbserial1410",
     "board": "arduino:avr:nano",
-    "configuration": "cpu=atmega328old"
+    "configuration": "cpu=atmega328old",
+    "sketch": "shutter_remote_controller.ino",
+    "port": "/dev/tty.wchusbserial1410"
 }
