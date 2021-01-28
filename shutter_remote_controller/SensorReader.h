@@ -6,8 +6,9 @@
 class SensorReader {
     public:
         // Constructor
-        SensorReader(RF24 *rf24, bool enable_rf24, int pin_poti, int poti_max, 
-                    float threshold_rf24, float threshold_poti, int size_hist, int size_actl);
+        SensorReader(byte pin_rf24_ce, byte pin_rf24_csn, bool enable_rf24, int pin_poti, 
+                           int poti_max, float threshold_rf24, float threshold_poti,
+                           int size_hist, int size_actl);
         void read_sensors();
         float get_target();
         float l_poti[N_READINGS];

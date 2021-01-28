@@ -1,6 +1,7 @@
 #include "SensorReader.h"
 
-SensorReader::SensorReader(RF24 *rf24, bool enable_rf24, int pin_poti, 
+
+SensorReader::SensorReader(byte pin_rf24_ce, byte pin_rf24_csn, bool enable_rf24, int pin_poti, 
                            int poti_max, float threshold_rf24, float threshold_poti,
                            int size_hist, int size_actl) {
                                  
@@ -11,7 +12,8 @@ SensorReader::SensorReader(RF24 *rf24, bool enable_rf24, int pin_poti,
     this->RF24_THRESHOLD = threshold_rf24;
     this->POTI_THRESHOLD = threshold_poti;
     this->ENABLE_RF24 = enable_rf24;
-    this->rf24 = rf24;
+    RF24 rf24(pin_rf24_ce,pin_rf24_csn);
+    this->rf24 = &rf24;
 }
 
 void SensorReader::read_sensors() {
@@ -31,8 +33,8 @@ void SensorReader::push_front(float* arr, float val) {
 float SensorReader::read_rf24() {
   float val = l_rf24[0];
   if(this->ENABLE_RF24) {
-    if (rf24->available()) {
-      rf24->read(&val, sizeof(val));
+    if (this->rf24->available()) {
+      this->rf24->read(&val, sizeof(val));
     } 
   }
   if(val > 1.0001) return 1.00;

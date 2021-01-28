@@ -22,12 +22,11 @@ unsigned long t_now = 0;
 unsigned long t_diff;
 long overshoot_millis = 0;
 
-RF24 rf24(PIN_RF24_CE,PIN_RF24_CSN);
 RCSwitch mySwitch = RCSwitch();
 
 const byte address[6] = "00001";
 
-SensorReader reader(&rf24, RF24_ENABLE, PIN_POTI, POTI_MAX, THRESHOLD_RF24, 
+SensorReader reader(PIN_RF24_CE, PIN_RF24_CSN, RF24_ENABLE, PIN_POTI, POTI_MAX, THRESHOLD_RF24, 
                     THRESHOLD_POTI, HIST_SIZE, ACTL_SIZE);
 // --- main ---
 
