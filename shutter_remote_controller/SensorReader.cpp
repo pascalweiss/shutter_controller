@@ -1,4 +1,5 @@
 #include "SensorReader.h"
+#include "config.h"
 
 
 SensorReader::SensorReader(byte pin_rf24_ce, byte pin_rf24_csn, bool enable_rf24, int pin_poti, 
@@ -14,6 +15,19 @@ SensorReader::SensorReader(byte pin_rf24_ce, byte pin_rf24_csn, bool enable_rf24
     this->ENABLE_RF24 = enable_rf24;
     RF24 rf24(pin_rf24_ce,pin_rf24_csn);
     this->rf24 = &rf24;
+}
+
+void SensorReader::init() {
+  pinMode(PIN_POTI, INPUT);                        
+  if(this->ENABLE_RF24) set_up_rf24();
+}
+
+void SensorReader::set_up_rf24() {
+  const byte address[6] = "00001";
+  this->rf24->begin();
+  this->rf24->openReadingPipe(0, address);
+  this->rf24->setPALevel(RF24_PA_MIN);
+  this->rf24->startListening();
 }
 
 void SensorReader::read_sensors() {

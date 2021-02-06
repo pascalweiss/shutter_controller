@@ -2,17 +2,19 @@
 #include <math.h>
 #include <time.h>
 #include <SPI.h>
-#include <RCSwitch.h>
 #include <nRF24L01.h>
 #include <RF24.h>
 #include "config.h"
 #include "SensorReader.h"
+#include "MotorController.h"
 
 
 // --- setup ---
 
-enum motor_direction { STOPPED, DOWN, UP, STOP, CYCLE_BREAK}; 
-enum sensor          { POTI, RF_24 };
+
+byte PIN_POTI        = A0;
+byte PIN_RF24_CE     = 7;
+byte PIN_RF24_CSN    = 8;
 
 int l_directn[DIRECTN_SIZE];
 float target = 0.0;
@@ -22,40 +24,32 @@ unsigned long t_now = 0;
 unsigned long t_diff;
 long overshoot_millis = 0;
 
-RCSwitch mySwitch = RCSwitch();
-
-const byte address[6] = "00001";
-
-SensorReader reader(PIN_RF24_CE, PIN_RF24_CSN, RF24_ENABLE, PIN_POTI, POTI_MAX, THRESHOLD_RF24, 
+SensorReader *reader = new SensorReader(PIN_RF24_CE, PIN_RF24_CSN, RF24_ENABLE, PIN_POTI, POTI_MAX, THRESHOLD_RF24, 
                     THRESHOLD_POTI, HIST_SIZE, ACTL_SIZE);
+MotorController *motorController = new MotorController();
+
 // --- main ---
 
 void setup() {
   Serial.begin(9600);
-  mySwitch.enableTransmit(PIN_RF433);
-  mySwitch.setPulseLength(RF433_PULSE_LENGTH);
-  mySwitch.setProtocol(RF433_PROTOCOL);
-  rf24.begin();
-  rf24.openReadingPipe(0, address);
-  rf24.setPALevel(RF24_PA_MIN);
-  rf24.startListening();
-  pinMode(PIN_POTI, INPUT);
-  pinMode(PIN_RELAIS_UP, OUTPUT);
-  pinMode(PIN_RELAIS_DOWN, OUTPUT);
+  reader->init();
+  Serial.println("finished setup");
 }
 
 void loop() {
   update_time_diff();
   positn = get_position(t_diff);
-  reader.read_sensors();
-  target = reader.get_target();
+
+  reader->read_sensors();
+  target = reader->get_target();
+
   overshoot_millis = get_overshoot_millis(overshoot_millis);
   update_directn(positn, target, overshoot_millis);
   if(is_cycle(l_directn)) {
     positn = break_cycle_with_new_position(l_directn);
   }
-  exec_motor_or_delay(l_directn[1], l_directn[0]);
-  log_state(reader.l_poti[0], reader.l_rf24[0]);
+  motorController->exec_motor_or_delay(l_directn[1], l_directn[0]);
+  log_state(reader->l_poti[0], reader->l_rf24[0]);
 }
 
 
@@ -155,39 +149,6 @@ float break_cycle_with_new_position(int *l_directn) {
   return new_position;
 }
 
-
-// --- motor ---  
-
-void exec_motor_or_delay(int old_directn, int directn) {
-  if(old_directn == directn || directn == STOPPED) delay(DELAY);
-  else {
-    if(directn == STOP) disable_motor(old_directn);
-    else enable_motor(directn); 
-  }
-}
-
-void enable_motor(int directn) {
-  if(directn == UP) {
-    mySwitch.send(RF433_UP);delay(200);
-    mySwitch.send(RF433_UP);
-  } else {
-    mySwitch.send(RF433_DOWN);delay(200);
-    mySwitch.send(RF433_DOWN);
-  }
-}
-
-void disable_motor(int old_directn) {
-  if(old_directn == DOWN) {
-    mySwitch.send(RF433_DOWN);delay(10);
-    mySwitch.send(RF433_DOWN);delay(10);
-    mySwitch.send(RF433_UP);delay(10);
-  }
-  else {
-    mySwitch.send(RF433_UP);delay(10);
-    mySwitch.send(RF433_UP);delay(10);
-    mySwitch.send(RF433_DOWN);delay(10);
-  }
-}
 
 // --- helper ---
 

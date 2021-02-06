@@ -3,7 +3,7 @@
 #define ACTL_SIZE                2     // the number of actual readings, that are used to determine, if the sensor state has changed. (requirement N > HIST_SIZE + ACTL_SIZE)
 #define DIRECTN_SIZE             12    // the number of directn commands, that are used to determine, if the system has a command cycle (shutter goes up and down repeatedly)
 #define STOP_CYCLE_THRESHOLD     3     // the number of repeated STOP-directn-commands, to break the stop-cycle
-#define RF24_ENABLE              1
+#define RF24_ENABLE              0
 #define RF24_MAX                 1500
 #define POTI_MAX                 1023  // max value of the POTI // schlafzimmer: 3280, prototyp: 4095
 #define POTI_MIN                 0
@@ -21,9 +21,6 @@
 #define THRESHOLD_OVERSHOOT_DOWN 0.02  // the threshold at which the shutter is pulled down additionally for some seconds
 #define SECS_OVERSHOOT_DOWN      3     // the seconds that the shutter is pulled up additionally, when the position reached THRESHOLD_OVERSHOOT_UP
 
-byte PIN_RELAIS_UP   = 4;
-byte PIN_RELAIS_DOWN = 5;
-byte PIN_POTI        = A0;
-byte PIN_RF433       = 10;
-byte PIN_RF24_CE     = 7;
-byte PIN_RF24_CSN    = 8;
+
+enum motor_direction { STOPPED, DOWN, UP, STOP, CYCLE_BREAK}; 
+enum sensor          { POTI, RF_24 };
