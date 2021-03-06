@@ -9,6 +9,7 @@
 from __future__ import print_function
 import time
 import random
+import struct
 from RF24 import *
 
 
@@ -17,11 +18,9 @@ def build_radio():
     radio = RF24(22, 0)
     pipes = [0xF0F0F0F0E1, 0xF0F0F0F0D2]
     radio.begin()
-    radio.enableDynamicPayloads()
     radio.setRetries(5, 15)
     radio.printDetails()
     radio.openWritingPipe(pipes[0])
-    radio.openReadingPipe(1, pipes[1])
     return radio
 
 
@@ -47,31 +46,9 @@ def str_to_bytes(msg):
 def run(radio):
     i = 0
     while 1:
-        # First, stop listening so we can talk.
-        radio.stopListening()
-
-        # send message
-        msg = get_payload(i)
-        print("sent: " + msg, end="")
-        radio.write(str_to_bytes(msg))
-
-        # Now, continue listening
-        radio.startListening()
-
-        # Describe the results
-        if wait_till_available(radio):
-            print('failed, response timed out.')
-        else:
-            # Grab the response, compare, and send to debugging spew
-            len = radio.getDynamicPayloadSize()
-            receive_payload = radio.read(len)
-
-            # Spew it
-            print(' ----> got response size={} value="{}"'.format(len, receive_payload.decode('utf-8')))
-
-        i += 1
-        if i > 1000: i = 0
-        time.sleep(0.1)
+        f = 0.0;
+        buffer = struct.pack("<f", random.random())
+        radio.write(buffer);
 
 
 if __name__ == "__main__":
