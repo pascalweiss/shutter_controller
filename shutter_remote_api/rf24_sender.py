@@ -11,7 +11,6 @@ class RF24Sender:
     def __init__(self, cepin, cspin, wrinting_pipe, retry_delay, retry_count):
         self.radio = RF24(cepin, cspin)
         self.radio.begin()
-        self.radio.enableDynamicPayloads()
         self.radio.setRetries(retry_delay, retry_count)
         self.radio.printDetails()
         self.radio.openWritingPipe(wrinting_pipe)
