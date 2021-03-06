@@ -24,8 +24,9 @@
 #define THRESHOLD_OVERSHOOT_DOWN 0.02  // the threshold at which the shutter is pulled down additionally for some seconds
 #define SECS_OVERSHOOT_DOWN      3     // the seconds that the shutter is pulled up additionally, when the position reached THRESHOLD_OVERSHOOT_UP
 
-byte PIN_RF24_CE     = 7;
-byte PIN_RF24_CSN    = 8;
+
+byte PIN_RF24_CE     = 9;
+byte PIN_RF24_CSN    = 10;
 byte PIN_RELAIS_UP   = 4;
 byte PIN_RELAIS_DOWN = 5;
 byte PIN_POTI        = A0;

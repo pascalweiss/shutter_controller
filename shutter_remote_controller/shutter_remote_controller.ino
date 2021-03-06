@@ -22,11 +22,22 @@ unsigned long t_now = 0;
 unsigned long t_diff;
 long overshoot_millis = 0;
 
-RF24 rf24(PIN_RF24_CE,PIN_RF24_CSN);
 RCSwitch mySwitch = RCSwitch();
 
-const byte address[6] = "00001";
 
+// TODO move rf24 config to other file
+
+RF24 rf24(PIN_RF24_CE,PIN_RF24_CSN);
+
+// Radio pipe addresses for the 2 nodes to communicate.
+const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
+
+// Payload
+float payload = 0.0;
+
+const int max_payload_size = 32;
+ 
+char receive_payload[max_payload_size + 1]; // +1 to allow room for a terminating NULL char
 
 // --- main ---
 
@@ -35,14 +46,23 @@ void setup() {
   mySwitch.enableTransmit(PIN_RF433);
   mySwitch.setPulseLength(RF433_PULSE_LENGTH);
   mySwitch.setProtocol(RF433_PROTOCOL);
+
+  rf24.setPayloadSize(sizeof(payload)); // float datatype occupies 4 bytes
+
   rf24.begin();
-  rf24.openReadingPipe(0, address);
-  rf24.setPALevel(RF24_PA_MIN);
+
+  // Optionally, increase the delay between retries & # of retries
+
+  rf24.setRetries(5, 15);
+  // rf24.openWritingPipe(pipes[1]);
+  rf24.openReadingPipe(1, pipes[0]);
   rf24.startListening();
+ 
   pinMode(PIN_POTI, INPUT);
   pinMode(PIN_RELAIS_UP, OUTPUT);
   pinMode(PIN_RELAIS_DOWN, OUTPUT);
 }
+
 
 void loop() {
   update_time_diff();
@@ -57,7 +77,6 @@ void loop() {
   exec_motor_or_delay(l_directn[1], l_directn[0]);
   log_state();
 }
-
 
 // --- time diff ---  
 
@@ -100,6 +119,7 @@ float read_rf24() {
   else if(val < -0.0001) return 0.00;
   else return val;
 }
+
 
 float read_poti() {
   int pot = analogRead(PIN_POTI);
