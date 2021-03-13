@@ -30,7 +30,7 @@ byte PIN_RF24_CSN    = 10;
 byte PIN_RELAIS_UP   = 4;
 byte PIN_RELAIS_DOWN = 5;
 byte PIN_POTI        = A0;
-byte PIN_RF433       = 10;
+byte PIN_RF433       = 7;
 
 
 // --- setup ---
