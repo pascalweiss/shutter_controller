@@ -32,29 +32,23 @@ RF24 rf24(PIN_RF24_CE,PIN_RF24_CSN);
 // Radio pipe addresses for the 2 nodes to communicate.
 const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
 
-// Payload
-float payload = 0.0;
-
-const int max_payload_size = 32;
- 
-char receive_payload[max_payload_size + 1]; // +1 to allow room for a terminating NULL char
-
 // --- main ---
 
 void setup() {
   Serial.begin(9600);
+  while (!Serial) {} // some boards need to wait to ensure access to serial over USB
   mySwitch.enableTransmit(PIN_RF433);
   mySwitch.setPulseLength(RF433_PULSE_LENGTH);
   mySwitch.setProtocol(RF433_PROTOCOL);
 
-  rf24.setPayloadSize(sizeof(payload)); // float datatype occupies 4 bytes
+    // initialize the transceiver on the SPI bus
+  if (!rf24.begin()) {
+    Serial.println(F("radio hardware is not responding!!"));
+    while (1) {} // hold in infinite loop
+  }
 
-  rf24.begin();
-
-  // Optionally, increase the delay between retries & # of retries
-
-  rf24.setRetries(5, 15);
-  // rf24.openWritingPipe(pipes[1]);
+  rf24.setRetries(5, 15); // Optionally, increase the delay between retries & # of retries
+  rf24.openWritingPipe(pipes[1]);
   rf24.openReadingPipe(1, pipes[0]);
   rf24.startListening();
  
@@ -109,7 +103,7 @@ void read_sensors() {
 }
 
 float read_rf24() {
-  float val = l_rf24[0];
+  float val = l_rf24[0]; 
   if(RF24_ENABLE) {
     if (rf24.available()) {
       rf24.read(&val, sizeof(val));
