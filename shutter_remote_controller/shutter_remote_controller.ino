@@ -5,12 +5,15 @@
 #include <RCSwitch.h>
 #include <nRF24L01.h>
 #include <RF24.h>
-#include "config.h"
+#include "config_application.h"
+#include "config_rf433.h"
+#include "config_rf24.h"
+#include "config_poti.h"
 
 // --- setup ---
 
-// enum motor_direction { STOPPED, DOWN, UP, STOP, CYCLE_BREAK}; 
-// enum sensor          { POTI, RF_24 };
+enum motor_direction { STOPPED, DOWN, UP, STOP, CYCLE_BREAK}; 
+enum sensor          { POTI, RF_24 };
 
 float l_poti[N];
 float l_rf24[N];
@@ -53,8 +56,6 @@ void setup() {
   rf24.startListening();
  
   pinMode(PIN_POTI, INPUT);
-  pinMode(PIN_RELAIS_UP, OUTPUT);
-  pinMode(PIN_RELAIS_DOWN, OUTPUT);
 }
 
 
