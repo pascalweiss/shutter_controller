@@ -5,6 +5,7 @@ from flask import Flask, request
 from rf24_sender import RF24Sender
 
 app = Flask(__name__)
+app.logger.setLevel(logging.INFO)
 sender = RF24Sender(22, 0, 0xF0F0F0F0E1, 5, 15)
 
 
