@@ -1,6 +1,9 @@
 // -------- config for 433Mhz sender module --------
 
 
+// set this to the corresponding digital pin
+byte PIN_RF433 = 7;
+
 // The value that is sent for moving the shutter up.
 // You have to sniff it from a remote control
 #define RF433_UP "10101000001010110101011000000000" 
@@ -16,6 +19,3 @@
 // the protocol that is used for sending/receing data
 // See rcSwitch documentation
 #define RF433_PROTOCOL 2
-
-// set this to the corresponding digital pin
-byte PIN_RF433 = 7;

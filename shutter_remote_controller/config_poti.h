@@ -1,5 +1,9 @@
 // --------config for the poti --------
 
+
+// analog pin that is used for reading out the poti    
+byte PIN_POTI = A0;
+
 // The tolerance for the poti. A change of the poti value is only observed, 
 // when the difference to the new value exceeds the tolerance. 
 // Out of pyhsical reasons the read value from a poti is never constant. 
@@ -10,6 +14,3 @@
 
 // min value of the poti.
 #define POTI_MIN 0 
-
-// analog pin that is used for reading out the poti    
-byte PIN_POTI = A0;
