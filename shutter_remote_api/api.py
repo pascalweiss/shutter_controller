@@ -6,7 +6,7 @@ from rf24_sender import RF24Sender
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
-writingPipes = [0xF0F0F0F0E1]
+writingPipes = [0xF0F0F0F0E1, 0xF0F0F0F0E2]
 sender = RF24Sender(22, 0, writingPipes, 5, 15)
 
 
