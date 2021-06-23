@@ -12,7 +12,7 @@
 
 // --- setup ---
 
-enum motor_direction { STOPPED, DOWN, UP, STOP, CYCLE_BREAK}; 
+enum motor_direction { STOPPED, DOWN, UP, STOP}; 
 enum sensor          { POTI, RF_24 };
 
 float l_poti[N];
@@ -33,9 +33,9 @@ RCSwitch mySwitch = RCSwitch();
 RF24 rf24(PIN_RF24_CE,PIN_RF24_CSN);
 
 // Radio pipe addresses for the 2 nodes to communicate.
-// bedroom:     { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL }
-// living-room: { 0xF0F0F0F0E2LL, 0xF0F0F0F0D3LL };
-const uint64_t pipes[2] = { 0xF0F0F0F0E2LL, 0xF0F0F0F0D3LL };
+
+const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL }; // bedroom
+// const uint64_t pipes[2] = { 0xF0F0F0F0E2LL, 0xF0F0F0F0D3LL }; // living-room
 
 // --- main ---
 
@@ -53,8 +53,9 @@ void setup() {
   }
 
   rf24.setRetries(5, 15); // Optionally, increase the delay between retries & # of retries
-  rf24.openWritingPipe(pipes[1]);
+  //rf24.openWritingPipe(pipes[1]); 
   rf24.openReadingPipe(1, pipes[0]);
+  
   rf24.startListening();
  
   pinMode(PIN_POTI, INPUT);
@@ -110,6 +111,7 @@ float read_rf24() {
   if(RF24_ENABLE) {
     if (rf24.available()) {
       rf24.read(&val, sizeof(val));
+      Serial.println(val);
     } 
   }
   if(val > 1.0001) return 1.00;
@@ -183,11 +185,12 @@ long get_overshoot_millis(long overshoot_millis) {
 int update_directn(float positn, float target, long overshoot_millis) {
   int directn = calc_directn(positn, target, overshoot_millis);
     push_front(l_directn, DIRECTN_SIZE, directn);
-
+/*
   if(is_cycle(l_directn)) {
     break_cycle_with_new_position(l_directn);
   } else {
   }
+  */
 }
 
 int calc_directn(float positn, float target, long overshoot_millis) {
@@ -221,15 +224,19 @@ bool is_cycle(int *l_directn) {
   for(int i = 0; i < DIRECTN_SIZE; i++) {
     if(l_directn[i] == STOP) {
       stop_count++;
-      if(stop_count > STOP_CYCLE_THRESHOLD) return true;
+      if(stop_count > STOP_CYCLE_THRESHOLD) {
+        return true;
+      }
     }
   }
   return false;
 }
 
 float break_cycle_with_new_position(int *l_directn) {
-  push_front(l_directn, DIRECTN_SIZE, CYCLE_BREAK);
-  push_front(l_directn, DIRECTN_SIZE, STOPPED); 
+  flush_arr(l_directn, DIRECTN_SIZE, STOPPED);
+  push_front(l_directn, DIRECTN_SIZE, STOP); 
+  int i = DIRECTN_SIZE;
+  Serial.println("break cycle");
   float new_position = target;
   return new_position;
 }
@@ -249,7 +256,8 @@ void enable_motor(int directn) {
   if(directn == UP) {
     mySwitch.send(RF433_UP);delay(200);
     mySwitch.send(RF433_UP);
-  } else {
+  } 
+  if(directn == DOWN) {
     mySwitch.send(RF433_DOWN);delay(200);
     mySwitch.send(RF433_DOWN);
   }
@@ -269,6 +277,13 @@ void disable_motor(int old_directn) {
 }
 
 // --- helper ---
+
+void flush_arr(int* arr, int arr_size, int val) {
+  int i = arr_size;
+  while(i --> 0) {
+    arr[i] = val;
+  }
+}
 
 void push_front(float* arr, int arr_size, float val) {
   int i = arr_size;

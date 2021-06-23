@@ -40,10 +40,10 @@
 #define THRESHOLD_MOVE_MOTOR 0.01  
 
 // the amount of seconds the motor takes to roll up the shutter
-#define SECS_ROLL_UP 23 // bedroom 21, living-room 23
+#define SECS_ROLL_UP 21 // bedroom 21, living-room 23
 
 // the amount of seconds the motor takes to roll down the shutter
-#define SECS_ROLL_DOWN 23 // bedroom 22, living-room 23
+#define SECS_ROLL_DOWN 22 // bedroom 22, living-room 23
 
 
 // -------- motor state recalibration --------
