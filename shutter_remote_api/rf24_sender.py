@@ -14,6 +14,7 @@ class RF24Sender:
         self.radio = RF24(cepin, cspin)
         self.radio.begin()
         self.radio.setRetries(retry_delay, retry_count)
+        self.radio.setPALevel(RF24_PA_MAX)
         self.radio.printDetails()
 
     def send(self, level, pipeId):
